@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Card Nova</title>
+  <meta name="description" content="Find the credit card that earns the most for how you actually spend.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip" href="#app">Skip to content</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="Main">
+      <a class="brand" href="#/matches" aria-label="Card Nova home">
+        <svg class="spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8z"/><path d="M19 15l.7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7z"/></svg>
+        <span>CARD <em>NOVA</em></span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#/matches" data-route="matches">My matches</a></li>
+        <li><a href="#/cards" data-route="cards">All cards</a></li>
+        <li><a href="#/calculators" data-route="calculators">Calculators</a></li>
+        <li><a href="#/fd-cards" data-route="fd-cards">FD-backed cards</a></li>
+      </ul>
+      <a class="btn btn-light" id="account-link" href="#/account" data-route="account">Sign in (optional)</a>
+    </nav>
+  </header>
+  <main id="app" tabindex="-1"></main>
+  <footer class="site-footer">
+    <p>Card Nova is a college software-engineering project. Card details are representative and can be out of date — confirm fees and rewards on the bank's website before you apply.</p>
+  </footer>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
