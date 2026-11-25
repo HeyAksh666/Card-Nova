@@ -33,7 +33,9 @@ st.markdown("""
 .facts{color:#c4bfb3;font-size:.9rem;line-height:1.7}
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap');
-html, body, [class*="st-"], button, input { font-family: 'Outfit', system-ui, sans-serif; }
+html, body, .stApp, .stApp p, .stApp label, .stApp li, .stApp button, .stApp input, .stApp textarea,
+.stApp [data-testid="stMarkdownContainer"], .stApp [data-baseweb="select"] { font-family: 'Outfit', system-ui, sans-serif; }
+[data-testid="stIconMaterial"], .material-icons, .material-symbols-rounded { font-family: 'Material Symbols Rounded' !important; }
 h1, h2, h3, .brand, [data-testid^='stHeading'] h1, [data-testid^='stHeading'] h2, [data-testid^='stHeading'] h3,
 [data-testid^='stHeading'] { font-family: 'Playfair Display', Georgia, serif !important; font-weight: 600 !important; }
 .brand { font-size: 1.25rem; letter-spacing: .04em; margin: 0 0 .5rem; }
@@ -55,7 +57,26 @@ h1, h2, h3, .brand, [data-testid^='stHeading'] h1, [data-testid^='stHeading'] h2
 .pv .holder b{text-transform:uppercase;letter-spacing:.05em}
 .pv .rupay{position:absolute;right:24px;bottom:16px;font-family:'Playfair Display',serif;font-style:italic;
     font-weight:600;font-size:1.45rem;color:#cba965}
+
+.stats{display:grid;gap:6px;background:#111;padding:14px 8px;text-align:center;margin:6px 0 10px}
+.stats small{display:block;color:#9b968b;font-size:.78rem}
+.stats b{font-size:1.05rem;font-weight:600;white-space:nowrap}
+.stats b.gold{color:#cba965}
+.perks{color:#c4bfb3;font-size:.9rem;line-height:1.6;margin:.4rem 0 .6rem;padding-left:1.1rem}
+.badge-match{display:inline-block;color:#8fd1a4;border:1px solid #1f3a2a;border-radius:3px;font-size:.78rem;
+    font-weight:600;padding:1px 8px;margin-bottom:8px}
+.tier{display:inline-block;background:#111;border:1px solid #1f1f1f;border-radius:3px;font-size:.78rem;
+    font-weight:600;padding:1px 8px;margin:0 6px 4px 0}
+.tier.gold{background:#cba965;color:#000;border-color:#cba965}
+.perks li{font-size:.9rem}
 </style>""", unsafe_allow_html=True)
+
+
+def stats(items):
+    """items: list of (label, value, gold?) shown as a compact stat strip."""
+    cells = "".join(f'<div><small>{l}</small><b class="{"gold" if g else ""}">{v}</b></div>' for l, v, g in items)
+    st.markdown(f'<div class="stats" style="grid-template-columns:repeat({len(items)},1fr)">{cells}</div>',
+                unsafe_allow_html=True)
 
 
 def card_art(card):
@@ -72,11 +93,12 @@ def card_body(card):
     st.markdown(f'<div class="bank">{c["bank"]}</div>', unsafe_allow_html=True)
     st.subheader(c["name"])
     st.markdown(card_art(c), unsafe_allow_html=True)
-    badge = f"`{c['tier']}`" + (f" `FD-backed · min {d['fd_min']}`" if c["is_fd_backed"] else "")
-    st.markdown(badge)
+    fd = f'<span class="tier gold">FD-backed · min {d["fd_min"]}</span>' if c["is_fd_backed"] else ""
+    st.markdown(f'<span class="tier">{c["tier"]}</span>{fd}', unsafe_allow_html=True)
     st.markdown(f'<div class="facts">💳 {d["fee"]}<br>⛽ {d["fuel"]}<br>✈️ Lounge: {d["lounge"]}</div>',
                 unsafe_allow_html=True)
-    st.markdown("\n".join(f"- {h}" for h in c["highlights"]))
+    st.markdown('<ul class="perks">' + "".join(f"<li>{h}</li>" for h in c["highlights"]) + "</ul>",
+                unsafe_allow_html=True)
 
 
 def apply_button(card, key):
@@ -146,11 +168,9 @@ def page_matches():
             st.markdown(f"### #{m['rank']}")
             card_body(m["card"])
             if m["lifestyle_match"]:
-                st.success("Fits your lifestyle")
-            a, b, c = st.columns(3)
-            a.metric("Rewards/yr", inr(m["rewards_year"]))
-            b.metric("Fuel saved", inr(m["fuel_saved"]))
-            c.metric("Net value", inr(m["net_value"]))
+                st.markdown('<span class="badge-match">Fits your lifestyle</span>', unsafe_allow_html=True)
+            stats([("Rewards/yr", inr(m["rewards_year"]), False), ("Fuel saved", inr(m["fuel_saved"]), False),
+                   ("Net value", inr(m["net_value"]), True)])
             with st.expander("How this is worked out"):
                 rows = {engine.CATEGORIES[k]: inr(v) for k, v in m["breakdown"].items()}
                 if m["lounge_value"]:
@@ -188,10 +208,8 @@ def page_calculators():
         spend = st.number_input("Monthly spend (₹)", 0, 10_000_000, 10000, step=500)
         cap = st.number_input("Monthly cashback cap (₹, 0 = none)", 0, 10_000_000, 0, step=100)
         r = engine.cashback(card, cat, spend, cap)
-        a, b, c = st.columns(3)
-        a.metric("Rate", f"{r['rate_pct']:g}%")
-        b.metric("Per month", inr(r["per_month"]))
-        c.metric("Per year", inr(r["per_year"]))
+        stats([("Rate", f"{r['rate_pct']:g}%", False), ("Per month", inr(r["per_month"]), False),
+               ("Per year", inr(r["per_year"]), True)])
         if r["card_cap"]:
             st.caption(f"This card's own cap on this category is {inr(r['card_cap'])} a month.")
     with right, st.container(border=True):
@@ -207,10 +225,8 @@ def page_calculators():
         except engine.ValidationError:
             st.warning("Enter a balance of at least ₹1 and at least 1 month.")
             return
-        a, b, c = st.columns(3)
-        a.metric("Monthly rate", f"{r['monthly_rate_pct']:.2f}%")
-        b.metric("Interest paid", inr(r["interest_paid"]))
-        c.metric("Still owed", inr(r["still_owed"]))
+        stats([("Monthly rate", f"{r['monthly_rate_pct']:.2f}%", False),
+               ("Interest paid", inr(r["interest_paid"]), True), ("Still owed", inr(r["still_owed"]), False)])
         if r["never_reduces"]:
             st.error("Your payment is no more than the monthly interest, so the balance will never go down.")
         elif r["cleared"]:
@@ -229,7 +245,7 @@ def page_fd():
     def render(o):
         card_body(o["card"])
         if o["eligible"]:
-            st.metric("Your credit limit", inr(o["credit_limit"]))
+            stats([("Your credit limit", inr(o["credit_limit"]), True)])
         else:
             st.warning(f"Add {inr(o['shortfall'])} to your FD to qualify")
         apply_button(o["card"], o["card"]["id"])
