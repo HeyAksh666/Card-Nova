@@ -12,7 +12,8 @@ from backend.seed_data import CARDS
 from backend.services import engine
 from backend.services.presenter import inr, present_card
 
-st.set_page_config(page_title="Card Nova", page_icon="✨", layout="wide")
+st.set_page_config(page_title="Card Nova", page_icon="✨", layout="wide",
+                   initial_sidebar_state="collapsed")
 
 THEMES = {
     "navy": "#0c2145,#050d1d", "emerald": "#0c3024,#04120d", "maroon": "#451020,#170509",
@@ -30,6 +31,30 @@ st.markdown("""
 .cc .dots{position:absolute;right:16px;bottom:14px;font-size:.6rem;letter-spacing:.18em;color:rgba(255,255,255,.5)}
 .bank{color:#cba965;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase}
 .facts{color:#c4bfb3;font-size:.9rem;line-height:1.7}
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap');
+html, body, [class*="st-"], button, input { font-family: 'Outfit', system-ui, sans-serif; }
+h1, h2, h3, .brand, [data-testid^='stHeading'] h1, [data-testid^='stHeading'] h2, [data-testid^='stHeading'] h3,
+[data-testid^='stHeading'] { font-family: 'Playfair Display', Georgia, serif !important; font-weight: 600 !important; }
+.brand { font-size: 1.25rem; letter-spacing: .04em; margin: 0 0 .5rem; }
+.brand b { color: #cba965; }
+[data-testid="stMainBlockContainer"] { max-width: 1100px; }
+[data-testid="stBaseButton-primary"], [data-testid="stBaseButton-secondary"] { border-radius: 4px; font-weight: 600; }
+[data-testid="stBaseButton-primary"] { background: #f6f2ea; color: #000; border: 0; box-shadow: 4px 4px 0 #8d7440; }
+[data-testid="stBaseButton-primary"]:hover { background: #fff; color: #000; }
+.pv{position:relative;aspect-ratio:1.586;border-radius:12px;padding:20px 24px;max-width:400px;margin:8px auto;
+    background:linear-gradient(115deg,#111 0%,#2a2a2a 40%,#101010 55%,#1b1b1b 100%);
+    border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 60px -30px rgba(203,169,101,.35)}
+.pv .top{display:flex;justify-content:space-between;font-size:.72rem;letter-spacing:.2em;color:rgba(255,255,255,.55)}
+.pv .logo{font-weight:700;color:#f4f0e6;letter-spacing:.04em;font-size:.9rem}.pv .logo b{color:#cba965}
+.pv .chip{position:absolute;left:24px;top:30%;width:13%;aspect-ratio:1.3;border-radius:4px;
+    background:linear-gradient(135deg,#e5cd94,#a98a4e 60%,#cdb078)}
+.pv .pan{position:absolute;left:24px;top:52%;font-size:1.05rem;letter-spacing:.22em}
+.pv .holder{position:absolute;left:24px;bottom:18px}
+.pv .holder small{display:block;color:#9b968b;font-size:.62rem;letter-spacing:.12em}
+.pv .holder b{text-transform:uppercase;letter-spacing:.05em}
+.pv .rupay{position:absolute;right:24px;bottom:16px;font-family:'Playfair Display',serif;font-style:italic;
+    font-weight:600;font-size:1.45rem;color:#cba965}
 </style>""", unsafe_allow_html=True)
 
 
@@ -67,41 +92,51 @@ def grid(cards, render, per_row=3):
 
 
 # ------------------------------------------------------------------ pages
+def preview_card(name):
+    holder = (name or "Your name").strip()[:26].upper()
+    return (f'<div class="pv"><div class="top"><span class="logo">✦ CARD <b>NOVA</b></span><span>SIGNATURE</span></div>'
+            f'<span class="chip"></span><div class="pan">5241 •••• •••• 2026</div>'
+            f'<div class="holder"><small>CARD HOLDER</small><b>{holder}</b></div><span class="rupay">RuPay</span></div>')
+
+
 def page_matches():
-    st.title("Your money profile")
     saved = st.session_state.get("profile", {
         "name": "", "salary": 60000, "lifestyle": "everyday_saver", "max_joining_fee": 1000,
         "expenses": {"online_shopping": 8000, "dining": 4000, "travel": 3000,
                      "fuel": 3000, "groceries": 6000, "utilities": 4000}})
-    with st.form("profile"):
-        c1, c2 = st.columns(2)
-        name = c1.text_input("Name on card", saved["name"], max_chars=26)
-        salary = c2.number_input("Monthly salary (₹)", 0, 10_000_000, int(saved["salary"]), step=1000)
-        keys = list(engine.LIFESTYLES)
-        lifestyle = c1.selectbox("Lifestyle", keys, keys.index(saved["lifestyle"]),
-                                 format_func=engine.LIFESTYLES.get)
-        max_fee = c2.number_input("Max joining fee I'll pay (₹)", 0, 1_000_000, int(saved["max_joining_fee"]), step=500)
-        st.subheader("Monthly expenses (₹)")
-        cols = st.columns(3)
-        expenses = {k: cols[i % 3].number_input(label, 0, 10_000_000, int(saved["expenses"][k]), step=500)
-                    for i, (k, label) in enumerate(engine.CATEGORIES.items())}
-        submitted = st.form_submit_button("Save profile", type="primary")
-    if submitted:
-        st.session_state["profile"] = {"name": name, "salary": salary, "lifestyle": lifestyle,
-                                       "max_joining_fee": max_fee, "expenses": expenses}
-    profile_raw = st.session_state.get("profile", saved)
+    with st.container(border=True):
+        left, right = st.columns([1.6, 1], gap="large")
+        with left:
+            st.header("Your money profile")
+            c1, c2 = st.columns(2)
+            name = c1.text_input("Name on card", saved["name"], max_chars=26)
+            salary = c2.number_input("Monthly salary (₹)", 0, 10_000_000, int(saved["salary"]), step=1000)
+            keys = list(engine.LIFESTYLES)
+            lifestyle = c1.selectbox("Lifestyle", keys, keys.index(saved["lifestyle"]),
+                                     format_func=engine.LIFESTYLES.get)
+            max_fee = c2.number_input("Max joining fee I'll pay (₹)", 0, 1_000_000,
+                                      int(saved["max_joining_fee"]), step=500)
+            st.subheader("Monthly expenses (₹)")
+            cols = st.columns(3)
+            expenses = {k: cols[i % 3].number_input(label, 0, 10_000_000, int(saved["expenses"][k]), step=500)
+                        for i, (k, label) in enumerate(engine.CATEGORIES.items())}
+            if st.button("Save profile", type="primary"):
+                st.toast("Profile saved for this session.")
+        with right:
+            st.markdown("<div style='height:2.5rem'></div>", unsafe_allow_html=True)
+            st.markdown(preview_card(name), unsafe_allow_html=True)
+    st.session_state["profile"] = {"name": name, "salary": salary, "lifestyle": lifestyle,
+                                   "max_joining_fee": max_fee, "expenses": expenses}
     try:
-        profile = engine.validate_profile(profile_raw)
+        profile = engine.validate_profile(st.session_state["profile"])
     except engine.ValidationError as exc:
         st.error("Check these fields: " + ", ".join(exc.errors))
         return
-    holder = profile["name"] or "Your name"
-    st.caption(f"Card holder: **{holder.upper()}**")
     matches, filtered = engine.recommend(profile, CARDS)
     st.header("Best cards for you")
     st.caption("Ranked by yearly rewards + fuel savings − fees, matched to your lifestyle.")
     if not matches:
-        st.info("No cards fit these limits. Raise your maximum joining fee, or try the FD-backed cards tab.")
+        st.info("No cards fit these limits. Raise your maximum joining fee, or open the FD-backed cards page.")
         return
     if filtered:
         st.caption(f"{len(filtered)} card(s) left out: joining fee above your limit or income below the bank's minimum.")
@@ -201,11 +236,14 @@ def page_fd():
     grid(options, render)
 
 
-PAGES = {"My matches": page_matches, "All cards": page_cards,
-         "Calculators": page_calculators, "FD-backed cards": page_fd}
-with st.sidebar:
-    st.markdown("## ✦ CARD **NOVA**")
-    choice = st.radio("Go to", list(PAGES), label_visibility="collapsed")
-    st.caption("College software-engineering project. Card details are representative; confirm fees and "
-               "rewards on the bank's website before applying.")
-PAGES[choice]()
+st.markdown('<div class="brand">✦ CARD <b>NOVA</b></div>', unsafe_allow_html=True)
+pages = [
+    st.Page(page_matches, title="My matches", url_path="matches", default=True),
+    st.Page(page_cards, title="All cards", url_path="cards"),
+    st.Page(page_calculators, title="Calculators", url_path="calculators"),
+    st.Page(page_fd, title="FD-backed cards", url_path="fd-cards"),
+]
+st.navigation(pages, position="top").run()
+st.divider()
+st.caption("College software-engineering project. Card details are representative; confirm fees and "
+           "rewards on the bank's website before applying.")
